@@ -1,0 +1,334 @@
+1. Back-End em Java com Spring Boot
+Passo 1: Criando o projeto Spring Boot
+Se você não tem o Spring Boot configurado, pode começar criando um projeto usando o Spring Initializr (https://start.spring.io/).
+
+Dependências do projeto:
+
+Spring Web: Para criar a API REST.
+Spring Data JPA: Para interação com o banco de dados.
+H2 Database: Banco de dados em memória (ou substitua por outro banco como MySQL se necessário).
+Baixe o projeto e extraia em uma pasta. Aqui está como o código será estruturado.
+
+
+
+
+src/
+  ├── main/
+      ├── java/
+      │   └── com/
+      │       └── exemplo/
+      │           └── cadastrousuario/
+      │               ├── CadastroUsuarioApplication.java
+      │               ├── model/
+      │               │   └── Usuario.java
+      │               ├── repository/
+      │               │   └── UsuarioRepository.java
+      │               ├── controller/
+      │               │   └── UsuarioController.java
+      └── resources/
+          └── application.properties
+
+
+
+
+Passo 2: Configuração do Banco de Dados e Spring Boot
+application.properties (Configuração do banco de dados H2):
+
+properties
+Copiar
+
+
+spring.datasource.url=jdbc:h2:mem:testdb
+spring.datasource.driverClassName=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=password
+spring.jpa.database-platform=org.hibernate.dialect.H2Dialect
+spring.h2.console.enabled=true
+spring.jpa.hibernate.ddl-auto=update
+
+
+Passo 3: Criar a Entidade Usuario.java
+Usuario.java (Modelo):
+
+package com.exemplo.cadastrousuario.model;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+@Entity
+public class Usuario {
+    
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
+    private String nome;
+    private String email;
+    private int idade;
+    
+    // Getters and Setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public int getIdade() {
+        return idade;
+    }
+
+    public void setIdade(int idade) {
+        this.idade = idade;
+    }
+}
+
+
+
+Passo 4: Criar o Repositório UsuarioRepository.java
+UsuarioRepository.java (Interface para interagir com o banco):
+
+
+
+package com.exemplo.cadastrousuario.repository;
+
+import com.exemplo.cadastrousuario.model.Usuario;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
+}
+
+
+
+Passo 5: Criar o Controller UsuarioController.java
+UsuarioController.java (Controller com as rotas HTTP):
+
+package com.exemplo.cadastrousuario.controller;
+
+import com.exemplo.cadastrousuario.model.Usuario;
+import com.exemplo.cadastrousuario.repository.UsuarioRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Optional;
+
+@RestController
+@RequestMapping("/api/usuarios")
+public class UsuarioController {
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    // Endpoint para cadastrar um novo usuário
+    @PostMapping
+    public ResponseEntity<Usuario> cadastrarUsuario(@RequestBody Usuario usuario) {
+        Usuario novoUsuario = usuarioRepository.save(usuario);
+        return new ResponseEntity<>(novoUsuario, HttpStatus.CREATED);
+    }
+
+    // Endpoint para listar todos os usuários
+    @GetMapping
+    public List<Usuario> listarUsuarios() {
+        return usuarioRepository.findAll();
+    }
+
+    // Endpoint para buscar um usuário pelo ID
+    @GetMapping("/{id}")
+    public ResponseEntity<Usuario> buscarUsuario(@PathVariable Long id) {
+        Optional<Usuario> usuario = usuarioRepository.findById(id);
+        return usuario.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    // Endpoint para editar um usuário
+    @PutMapping("/{id}")
+    public ResponseEntity<Usuario> editarUsuario(@PathVariable Long id, @RequestBody Usuario usuario) {
+        if (!usuarioRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        usuario.setId(id);
+        Usuario usuarioEditado = usuarioRepository.save(usuario);
+        return ResponseEntity.ok(usuarioEditado);
+    }
+
+    // Endpoint para deletar um usuário
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletarUsuario(@PathVariable Long id) {
+        if (!usuarioRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
+        usuarioRepository.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+}
+
+
+
+Passo 6: Classe Principal CadastroUsuarioApplication.java
+CadastroUsuarioApplication.java (Classe principal que inicializa o Spring Boot):
+
+
+package com.exemplo.cadastrousuario;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class CadastroUsuarioApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(CadastroUsuarioApplication.class, args);
+    }
+}
+
+
+
+2. Front-End (HTML + JavaScript)
+O código do front-end (HTML + JavaScript) será o mesmo que forneci anteriormente. Ele se comunica com o back-end Java usando a API REST.
+
+index.html
+
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cadastro de Usuário</title>
+</head>
+<body>
+  <h1>Cadastro de Usuário</h1>
+
+  <form id="cadastroForm">
+    <label for="nome">Nome:</label>
+    <input type="text" id="nome" required><br><br>
+
+    <label for="email">Email:</label>
+    <input type="email" id="email" required><br><br>
+
+    <label for="idade">Idade:</label>
+    <input type="number" id="idade" required><br><br>
+
+    <button type="submit">Cadastrar</button>
+  </form>
+
+  <h2>Usuários Cadastrados</h2>
+  <ul id="usuariosList"></ul>
+
+  <script>
+    // Função para cadastrar um usuário
+    document.getElementById("cadastroForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const nome = document.getElementById("nome").value;
+      const email = document.getElementById("email").value;
+      const idade = document.getElementById("idade").value;
+
+      fetch("http://localhost:8080/api/usuarios", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ nome, email, idade })
+      })
+      .then(response => response.json())
+      .then(data => {
+        alert("Usuário cadastrado com sucesso!");
+        listarUsuarios(); // Atualiza a lista de usuários
+      })
+      .catch(error => {
+        console.error("Erro:", error);
+      });
+    });
+
+    // Função para listar os usuários cadastrados
+    function listarUsuarios() {
+      fetch("http://localhost:8080/api/usuarios")
+        .then(response => response.json())
+        .then(data => {
+          const usuariosList = document.getElementById("usuariosList");
+          usuariosList.innerHTML = ""; // Limpa a lista atual
+          data.forEach(usuario => {
+            const li = document.createElement("li");
+            li.innerHTML = `Nome: ${usuario.nome} | Email: ${usuario.email} | Idade: ${usuario.idade}
+                            <button onclick="editarUsuario(${usuario.id})">Editar</button>
+                            <button onclick="deletarUsuario(${usuario.id})">Deletar</button>`;
+            usuariosList.appendChild(li);
+          });
+        });
+    }
+
+    // Função para editar um usuário
+    function editarUsuario(id) {
+      const novoNome = prompt("Novo nome:");
+      const novoEmail = prompt("Novo email:");
+      const novaIdade = prompt("Nova idade:");
+
+      fetch(`http://localhost:8080/api/usuarios/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ nome: novoNome, email: novoEmail, idade: novaIdade })
+      })
+      .then(response => response.json())
+      .then(() => {
+        alert("Usuário atualizado!");
+        listarUsuarios(); // Atualiza a lista
+      })
+      .catch(error => console.error("Erro ao editar:", error));
+    }
+
+    // Função para deletar um usuário
+    function deletarUsuario(id) {
+      if (confirm("Você tem certeza que deseja excluir este usuário?")) {
+        fetch(`http://localhost:8080/api/usuarios/${id}`, {
+          method: "DELETE"
+        })
+        .then(response => response.json())
+        .then(() => {
+          alert("Usuário excluído!");
+          listarUsuarios(); // Atualiza a lista
+        })
+        .catch(error => console.error("Erro ao deletar:", error));
+      }
+    }
+
+    // Carregar usuários na página inicial
+    listarUsuarios();
+  </script>
+</body>
+</html>
+
+
+3. Como Rodar o Projeto
+Rodando o Back-End: Para rodar a aplicação Spring Boot, execute o comando abaixo no terminal dentro da pasta do projeto:
+
+bash
+
+mvn spring-boot:run
+
+
+Rodando o Front-End: Abra o arquivo index.html no seu navegador.
+
+O projeto estará disponível no http://localhost:8080, e você poderá criar, listar, editar e excluir usuários através da interface web.
